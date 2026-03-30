@@ -53,7 +53,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>br.ufscar.dc.compiladores.la.lexico.Principal</mainClass>
+                            <mainClass>br.ufscar.dc.compiladores.linguagem.la.Principal</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>

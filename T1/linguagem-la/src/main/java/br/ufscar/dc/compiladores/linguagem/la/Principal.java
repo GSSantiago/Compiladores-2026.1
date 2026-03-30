@@ -7,7 +7,6 @@ import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.Token;
 
 public class Principal {
-
     public static void main(String[] args) {
         if (args.length < 2) {
             System.out.println("Uso: java -jar me-compilador.jar {entrada} {saida}");
@@ -20,16 +19,39 @@ public class Principal {
         try (PrintWriter pw = new PrintWriter(arquivoSaida)) {
             
             CharStream cs = CharStreams.fromFileName(arquivoEntrada);
-            // LALexer lex = new LALexer(cs);
+            LALexer lex = new LALexer(cs);
             
             Token t = null;
             while ((t = lex.nextToken()).getType() != Token.EOF) {
+                String nomeToken = LALexer.VOCABULARY.getDisplayName(t.getType());
+                String texto = t.getText();
+                int linha = t.getLine();
+
+                //Erro de comentário aberto que nunca fecha
+                if (nomeToken.equals("COMENTARIO_NAO_FECHADO")) {
+                    pw.println("Linha " + linha + ": comentario nao fechado");
+                    break; 
+                } 
                 
-                // TODO: Analisar caractere por caracter e printar
-                // Exemplo de como printar:
-                // pw.print("Imprimindo no arquivo, sem quebra de linha no final");
-                // pw.println("...Agora imprimindo com quebra de linha");
-                // pw.println("no final");
+                //Erro de aspas abertas sem fechamento 
+                else if (nomeToken.equals("CADEIA_NAO_FECHADA")) {
+                    pw.println("Linha " + linha + ": cadeia literal nao fechada");
+                    break;
+                } 
+                
+                //Erro de símbolo inválido
+                else if (nomeToken.equals("ERRO")) {
+                    pw.println("Linha " + linha + ": " + texto + " - simbolo nao identificado");
+                    break; 
+                }
+
+                if (nomeToken.equals("IDENT") || nomeToken.equals("CADEIA") || 
+                    nomeToken.equals("NUM_INT") || nomeToken.equals("NUM_REAL")) {
+                    pw.println("<'" + texto + "'," + nomeToken + ">");
+                } 
+                else {
+                    pw.println("<'" + texto + "','" + texto + "'>");
+                }
             }
             
         } catch (IOException ex) {
