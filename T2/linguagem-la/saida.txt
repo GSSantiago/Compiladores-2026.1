@@ -1,4 +1,2 @@
-<'algoritmo','algoritmo'>
-<'declare','declare'>
-<'nome',IDENT>
-Linha 5: ~ - simbolo nao identificado
+Linha 10: erro sintatico proximo a leia
+Fim da compilacao
