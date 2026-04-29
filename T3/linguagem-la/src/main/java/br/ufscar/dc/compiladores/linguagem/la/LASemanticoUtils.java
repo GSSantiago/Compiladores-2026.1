@@ -133,7 +133,7 @@ public class LASemanticoUtils {
         else if (ctx.NUM_REAL() != null)
             tipoRetorno = TipoT3.REAL;
         else
-            tipoRetorno = verificarTipo(tabela, ctx.exp_aritmetica().get(0));
+            tipoRetorno = verificarTipo(tabela, ctx.expressao().get(0));
 
         return tipoRetorno;
     }
@@ -204,7 +204,7 @@ public class LASemanticoUtils {
     }
 
     public static TipoT3 verificarTipo(TabelaDeSimbolos tabela, LAParser.Exp_relacionalContext ctx) {
-        TipoT3 tipoRetorno = verificarTipo(tabela, ctx.exp_aritmetica().get(0));
+        TipoT3 tipoRetorno = verificarTipo(tabela, ctx.expressao().get(0));
 
         if (ctx.exp_aritmetica().size() > 1) {
             TipoT3 tipoAtual = verificarTipo(tabela, ctx.exp_aritmetica().get(1));
