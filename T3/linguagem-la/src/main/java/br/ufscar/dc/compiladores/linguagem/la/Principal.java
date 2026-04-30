@@ -5,6 +5,7 @@ import java.io.PrintWriter;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
+import br.ufscar.dc.compiladores.linguagem.la.LAParser.ProgramaContext;
 
 public class Principal {
     public static void main(String[] args) throws IOException {
@@ -27,15 +28,18 @@ public class Principal {
         // Cria fluxo de tokens
         CommonTokenStream tokens = new CommonTokenStream(lex);
 
-        // Cria analisador sintático
+        // Cria analisador sintático com a arvore
         LAParser parser = new LAParser(tokens);
+        ProgramaContext arvore = parser.programa();
 
-        // Abre arquivo de saída
+        // Cria analisador semantico e passa a arvore vinda do sintático
+        LASemantico laSeman = new LASemantico();
+
+        laSeman.visitPrograma(arvore);
+        // Abre arquivo de saída e escreve os erros
         try (PrintWriter pw = new PrintWriter(arquivoSaida)) {
-
-
-            // Inicia a análise sintática
-            parser.programa();
+            LASemanticoUtils.errosSemanticos.forEach(pw::println);
+            pw.println("Fim da compilacao");
 
         } catch (IOException ex) {
             System.err.println("Erro na manipulação do arquivo: " + ex.getMessage());

@@ -1,34 +1,34 @@
-package main.java.br.ufscar.dc.compiladores.linguagem.la;
+package br.ufscar.dc.compiladores.linguagem.la;
 
-import static br.ufscar.dc.compiladores.t3.LASemanticoUtils.verificarTipo;
-import static br.ufscar.dc.compiladores.t3.LASemanticoUtils.adicionaErroSemantico;
-import static br.ufscar.dc.compiladores.t3.LASemanticoUtils.verificaCompatibilidade;
-import br.ufscar.dc.compiladores.t3.TabelaDeSimbolos.TipoT3;
+import static br.ufscar.dc.compiladores.linguagem.la.LASemanticoUtils.verificarTipo;
+import static br.ufscar.dc.compiladores.linguagem.la.LASemanticoUtils.adicionaErroSemantico;
+import static br.ufscar.dc.compiladores.linguagem.la.LASemanticoUtils.verificaCompatibilidade;
+import br.ufscar.dc.compiladores.linguagem.la.TabelaSimbolos.TipoLA;
 import org.antlr.v4.runtime.Token;
 
 public class LASemantico extends LABaseVisitor<Void> {
 
     // Renomeado de 'tabela' para 'tabelaAtual' para ser mais descritivo
-    TabelaDeSimbolos tabelaAtual;
+    TabelaSimbolos tabelaAtual;
 
     // Mantido como estático para que os Utils consigam acessar
     static Escopos escoposAninhados = new Escopos();
 
     // Método para registrar variáveis com nomes de parâmetros alterados
     public void registrarVariavel(String nomeVar, String strTipo, Token tNome, Token tTipo) {
-        TabelaDeSimbolos escopoDestino = escoposAninhados.obterEscopoAtual();
-        TipoT3 tipoEnum;
+        TabelaSimbolos escopoDestino = escoposAninhados.obterEscopoAtual();
+        TipoLA tipoEnum;
 
-        // Uso de switch expression (se estiver usando Java 12+) ou apenas simplificação
+        // Uso de switch expression
         switch (strTipo) {
-            case "literal":  tipoEnum = TipoT3.LITERAL; break;
-            case "inteiro":  tipoEnum = TipoT3.INTEIRO; break;
-            case "real":     tipoEnum = TipoT3.REAL;    break;
-            case "logico":   tipoEnum = TipoT3.LOGICO;  break;
-            default:         tipoEnum = TipoT3.INVALIDO; break;
+            case "literal":  tipoEnum = TipoLA.LITERAL; break;
+            case "inteiro":  tipoEnum = TipoLA.INTEIRO; break;
+            case "real":     tipoEnum = TipoLA.REAL;    break;
+            case "logico":   tipoEnum = TipoLA.LOGICO;  break;
+            default:         tipoEnum = TipoLA.INVALIDO; break;
         }
 
-        if (tipoEnum == TipoT3.INVALIDO) {
+        if (tipoEnum == TipoLA.INVALIDO) {
             adicionaErroSemantico(tTipo, "tipo " + strTipo + " nao declarado");
         }
 
@@ -41,7 +41,7 @@ public class LASemantico extends LABaseVisitor<Void> {
 
     @Override
     public Void visitPrograma(LAParser.ProgramaContext ctx) {
-        tabelaAtual = new TabelaDeSimbolos();
+        tabelaAtual = new TabelaSimbolos();
         return super.visitPrograma(ctx);
     }
 
@@ -79,18 +79,28 @@ public class LASemantico extends LABaseVisitor<Void> {
     }
 
     @Override
+    public Void visitCmdEscreva(LAParser.CmdEscrevaContext ctx) {
+        tabelaAtual = escoposAninhados.obterEscopoAtual();
+
+        for (LAParser.ExpressaoContext expressao : ctx.expressao())
+            verificarTipo(tabelaAtual, expressao);
+
+        return super.visitCmdEscreva(ctx);
+    }
+
+    @Override
     public Void visitCmdAtribuicao(LAParser.CmdAtribuicaoContext ctx) {
         tabelaAtual = escoposAninhados.obterEscopoAtual();
         
-        TipoT3 tipoExpressao = verificarTipo(tabelaAtual, ctx.expressao());
+        TipoLA tipoExpressao = verificarTipo(tabelaAtual, ctx.expressao());
         String nomeVar = ctx.identificador().getText();
         Token tokenVar = ctx.identificador().getStart();
 
-        if (tipoExpressao != TipoT3.INVALIDO) {
+        if (tipoExpressao != TipoLA.INVALIDO) {
             if (!tabelaAtual.existe(nomeVar)) {
                 adicionaErroSemantico(tokenVar, "identificador " + nomeVar + " nao declarado");
             } else {
-                TipoT3 tipoVariavel = verificarTipo(tabelaAtual, nomeVar);
+                TipoLA tipoVariavel = verificarTipo(tabelaAtual, nomeVar);
                 
                 // Lógica de compatibilidade simplificada
                 boolean compativel = (tipoVariavel == tipoExpressao) || 
