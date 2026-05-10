@@ -8,21 +8,17 @@ import org.antlr.v4.runtime.Token;
 
 public class LASemanticoUtils {
 
-    // Criação da lista que armazenará os erros identificados pelo analisador.
+    // Lista de erros semânticos encontrados
     public static List<String> errosSemanticos = new ArrayList<>();
 
-    // Método auxiliar utilizado para adicionar um novo erro identificado na lista.
+    // Adiciona erro na lista se ele ainda não existir
     public static void adicionaErroSemantico(Token tok, String mensagem) {
         int linha = tok.getLine();
-        
-        // Verifica se o erro já foi identificado para poder adicioná-lo à lista.
         if (!errosSemanticos.contains("Linha " + linha + ": " + mensagem)) 
             errosSemanticos.add(String.format("Linha %d: %s", linha, mensagem));
     }
     
-    // Método auxiliar que verifica a compatibilidade entre operadores aritméticos.
-    // Caso a operação envolva pelo menos um valor real, a operação deve ser tratada
-    // como uma operação entre números reais, mesmo que um deles seja um inteiro.
+    // Verifica compatibilidade entre tipos numéricos (podendo passar inteiro para real se pelo menos um for real)
     public static boolean verificaCompatibilidade(TipoLA T1, TipoLA T2) {
         boolean flag = false;
         
@@ -36,8 +32,7 @@ public class LASemanticoUtils {
         return flag;
     }
     
-    // Método auxiliar que verifica a compatibilidade entre operadores para tratá-los
-    // como uma operação lógica.
+    // Verifica se os tipos podem ser usados em operações lógicas
     public static boolean verificaCompatibilidadeLogica(TipoLA T1, TipoLA T2) {
         boolean flag = false;
         
@@ -50,16 +45,13 @@ public class LASemanticoUtils {
     }
                     
     public static TipoLA verificarTipo(TabelaSimbolos tabela, LAParser.Exp_aritmeticaContext ctx) {
-        // A variável que será retornada ao fim da execução é inicializada com o tipo
-        // do primeiro elemento que será verificado, para fins de comparação.
+        // Inicializa com o tipo do primeiro termo
         TipoLA tipoRetorno = verificarTipo(tabela, ctx.termo().get(0));
                 
         for (var termoArit : ctx.termo()) {
-            // Esta outra variável recebe os tipos dos outros termos da expressão.
             TipoLA tipoAtual = verificarTipo(tabela, termoArit);
             
-            // Com o auxílio do método declarado anteriormente, o programa verifica se deve tratar a
-            // verificação atual como uma operação entre números reais.
+            // Define como REAL se houver compatibilidade entre tipos numéricos
             if ((verificaCompatibilidade(tipoAtual, tipoRetorno)) && (tipoAtual != TipoLA.INVALIDO))
                 tipoRetorno = TipoLA.REAL;
             else
@@ -70,16 +62,11 @@ public class LASemanticoUtils {
     }
 
     public static TipoLA verificarTipo(TabelaSimbolos tabela, LAParser.TermoContext ctx) {
-        // A variável que será retornada ao fim da execução é inicializada com o tipo
-        // do primeiro elemento que será verificado, para fins de comparação.
         TipoLA tipoRetorno = verificarTipo(tabela, ctx.fator().get(0));
                 
         for (LAParser.FatorContext fatorArit : ctx.fator()) {
-            // Esta outra variável recebe os tipos dos outros termos da expressão.
             TipoLA tipoAtual = verificarTipo(tabela, fatorArit);
             
-            // Com o auxílio do método declarado anteriormente, o programa verifica se deve tratar a
-            // verificação atual como uma operação entre números reais.
             if ((verificaCompatibilidade(tipoAtual, tipoRetorno)) && (tipoAtual != TipoLA.INVALIDO))
                 tipoRetorno = TipoLA.REAL;
             else
@@ -99,7 +86,7 @@ public class LASemanticoUtils {
     }
 
     public static TipoLA verificarTipo(TabelaSimbolos tabela, LAParser.ParcelaContext ctx) {
-        // Identifica se é uma parcela unária ou não unária.
+        // Direciona para parcela unária ou não unária
         if (ctx.parcela_unario() != null)
             return verificarTipo(tabela, ctx.parcela_unario());
         else
@@ -111,15 +98,11 @@ public class LASemanticoUtils {
         String nome;
         
         if (ctx.identificador() != null) {
-            // Obtém o nome da variável atual.
             nome = ctx.identificador().getText();
             
-            // Caso a variável já tenha sido declarada, apenas retorna o tipo associado a ela.
+            // Direciona para parcela unária ou não unária
             if (tabela.existe(nome))
                 tipoRetorno = tabela.verificar(nome);
-            // Caso contrário, utiliza uma tabela auxiliar para prosseguir com a verificação. Se a variável não
-            // tiver sido declarada, utiliza o método adicionaErroSemantico para verificar se o erro já foi
-            // exibido e, caso ainda não tenha sido, o adiciona à lista.
             else {
                 TabelaSimbolos tabelaAux = LASemantico.escoposAninhados.percorrerEscoposAninhados().get(LASemantico.escoposAninhados.percorrerEscoposAninhados().size() - 1);
                 if (!tabelaAux.existe(nome)) {
@@ -142,8 +125,6 @@ public class LASemanticoUtils {
         TipoLA tipoRetorno;
         String nome;
 
-        // Utiliza uma lógica semelhante à verificação de tipo anterior, verificando a existência da variável
-        // e tentando adicioná-la à lista de erros.
         if (ctx.identificador() != null) {
             nome = ctx.identificador().getText();
         
@@ -161,8 +142,7 @@ public class LASemanticoUtils {
     public static TipoLA verificarTipo(TabelaSimbolos tabela, LAParser.ExpressaoContext ctx) {
         TipoLA tipoRetorno = verificarTipo(tabela, ctx.termo_logico(0));
 
-        // Para expressões lógicas, a ideia resume-se apenas em verificar se os tipos analisados
-        // são diferentes.
+        // Verifica se os tipos da expressão lógica são consistentes
         for (LAParser.Termo_logicoContext termoLogico : ctx.termo_logico()) {
             TipoLA tipoAtual = verificarTipo(tabela, termoLogico);
             if (tipoRetorno != tipoAtual && tipoAtual != TipoLA.INVALIDO)
@@ -175,8 +155,6 @@ public class LASemanticoUtils {
     public static TipoLA verificarTipo(TabelaSimbolos tabela, LAParser.Termo_logicoContext ctx) {
         TipoLA tipoRetorno = verificarTipo(tabela, ctx.fator_logico(0));
 
-        // Para expressões lógicas, a ideia resume-se apenas em verificar se os tipos analisados
-        // são diferentes.
         for (LAParser.Fator_logicoContext fatorLogico : ctx.fator_logico()) {
             TipoLA tipoAtual = verificarTipo(tabela, fatorLogico);
             if (tipoRetorno != tipoAtual && tipoAtual != TipoLA.INVALIDO)
@@ -209,8 +187,7 @@ public class LASemanticoUtils {
         if (ctx.exp_aritmetica().size() > 1) {
             TipoLA tipoAtual = verificarTipo(tabela, ctx.exp_aritmetica().get(1));
 
-            // Semelhante ao que foi feito com as expressões aritméticas, ocorre uma verificação
-            // para saber se a expressão atual pode ser tratada como uma operação lógica.
+            // Define como LOGICO se os tipos comparados forem compatíveis
             if (tipoRetorno == tipoAtual || verificaCompatibilidadeLogica(tipoRetorno, tipoAtual))
                 tipoRetorno = TipoLA.LOGICO;
             else
@@ -221,7 +198,7 @@ public class LASemanticoUtils {
 
     }
 
-    // Verificação padrão de tipos de variáveis a partir da tabela.
+    // Busca tipo de uma variável pelo nome na tabela
     public static TipoLA verificarTipo(TabelaSimbolos tabela, String nomeVar) {
         return tabela.verificar(nomeVar);
     }
