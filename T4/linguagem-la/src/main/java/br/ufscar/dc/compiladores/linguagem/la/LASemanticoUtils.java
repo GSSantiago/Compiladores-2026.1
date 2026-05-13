@@ -1,8 +1,8 @@
 package br.ufscar.dc.compiladores.linguagem.la;
 
-// Importações básicas para o funcionamento do programa.
 import br.ufscar.dc.compiladores.linguagem.la.TabelaSimbolos.TipoLA;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import org.antlr.v4.runtime.Token;
 
@@ -91,10 +91,17 @@ public class LASemanticoUtils {
 
     public static TipoLA verificarTipo(TabelaSimbolos tabela, LAParser.FatorContext ctx) {
         TipoLA tipoRetorno = null;
-        
-        for (LAParser.ParcelaContext parcela : ctx.parcela())
+
+        for (LAParser.ParcelaContext parcela : ctx.parcela()) {
             tipoRetorno = verificarTipo(tabela, parcela);
 
+           //Se for registro, reduz o nome e verifica de novo
+            if (tipoRetorno == TipoLA.REGISTRO) {
+                String nome = parcela.getText();
+                nome = reduzNome(nome, "(");
+                tipoRetorno = verificarTipo(tabela, nome);
+            }
+        }
         return tipoRetorno;
     }
 
@@ -106,37 +113,6 @@ public class LASemanticoUtils {
             return verificarTipo(tabela, ctx.parcela_nao_unario());
     }
 
-    public static TipoLA verificarTipo(TabelaSimbolos tabela, LAParser.Parcela_unarioContext ctx) {
-        TipoLA tipoRetorno;
-        String nome;
-        
-        if (ctx.identificador() != null) {
-            // Obtém o nome da variável atual.
-            nome = ctx.identificador().getText();
-            
-            // Caso a variável já tenha sido declarada, apenas retorna o tipo associado a ela.
-            if (tabela.existe(nome))
-                tipoRetorno = tabela.verificar(nome);
-            // Caso contrário, utiliza uma tabela auxiliar para prosseguir com a verificação. Se a variável não
-            // tiver sido declarada, utiliza o método adicionaErroSemantico para verificar se o erro já foi
-            // exibido e, caso ainda não tenha sido, o adiciona à lista.
-            else {
-                TabelaSimbolos tabelaAux = LASemantico.escoposAninhados.percorrerEscoposAninhados().get(LASemantico.escoposAninhados.percorrerEscoposAninhados().size() - 1);
-                if (!tabelaAux.existe(nome)) {
-                    adicionaErroSemantico(ctx.identificador().getStart(), "identificador " + ctx.identificador().getText() + " nao declarado");
-                    tipoRetorno = TipoLA.INVALIDO;
-                } else 
-                    tipoRetorno = tabelaAux.verificar(nome);
-            }
-        } else if (ctx.NUM_INT() != null)
-            tipoRetorno = TipoLA.INTEIRO;
-        else if (ctx.NUM_REAL() != null)
-            tipoRetorno = TipoLA.REAL;
-        else
-            tipoRetorno = verificarTipo(tabela, ctx.expressao().get(0));
-
-        return tipoRetorno;
-    }
 
     public static TipoLA verificarTipo(TabelaSimbolos tabela, LAParser.Parcela_nao_unarioContext ctx) {
         TipoLA tipoRetorno;
@@ -221,8 +197,49 @@ public class LASemanticoUtils {
 
     }
 
+    // Retorna o TipoLA correto, removendo o símbolo de ponteiro (^) se existir
+    public static TipoLA confereTipo(HashMap<String, ArrayList<String>> tabela, String tipoRetorno) {
+        TipoLA tipoAux;
+        // Remove ponteiro
+        if (tipoRetorno.charAt(0) == '^') {
+            tipoRetorno = tipoRetorno.substring(1);
+        }
+
+        // Verifica primeiro se é um registro (struct) salvo na tabela
+        if (tabela.containsKey(tipoRetorno)) {
+            tipoAux = TipoLA.REGISTRO;
+        } else {
+            // Caso não seja registro, valida qual o retorno
+            switch (tipoRetorno) {
+                case "real":
+                    tipoAux = TipoLA.REAL;
+                    break;
+                case "inteiro":
+                    tipoAux = TipoLA.INTEIRO;
+                    break;
+                case "logico":
+                    tipoAux = TipoLA.LOGICO;
+                    break;
+                case "literal":
+                    tipoAux = TipoLA.LITERAL;
+                    break;
+                default:
+                    tipoAux = TipoLA.INVALIDO;
+                    break;
+            }
+        }
+
+        return tipoAux;
+    }
+
     // Verificação padrão de tipos de variáveis a partir da tabela.
     public static TipoLA verificarTipo(TabelaSimbolos tabela, String nomeVar) {
+        return tabela.verificar(nomeVar);
+    }
+
+    // Extrai direto o texto do IDENT base
+    public static TipoLA verificarTipo(TabelaSimbolos tabela, LAParser.IdentificadorContext ctx) {
+        String nomeVar = ctx.IDENT().get(0).getText();
         return tabela.verificar(nomeVar);
     }
 
