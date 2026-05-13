@@ -113,6 +113,60 @@ public class LASemanticoUtils {
             return verificarTipo(tabela, ctx.parcela_nao_unario());
     }
 
+       public static TipoLA verificarTipo(TabelaSimbolos tabela, LAParser.Parcela_unarioContext ctx) {
+        TipoLA tipoRetorno = null;
+        String nome;
+        
+        if (ctx.identificador() != null) {            
+            // Lida com vetores
+            if (!ctx.identificador().dimensao().exp_aritmetica().isEmpty())
+                nome = ctx.identificador().IDENT().get(0).getText();
+            else
+                nome = ctx.identificador().getText();
+            
+            if (tabela.existe(nome)) {
+                tipoRetorno = tabela.verificar(nome);
+            }
+            else {
+                TabelaSimbolos tabelaAux = escoposAninhados.obterEscopoAtual();
+                
+                if (!tabelaAux.existe(nome)) {
+                    adicionaErroSemantico(ctx.identificador().getStart(), "identificador " + ctx.identificador().getText() + " nao declarado");
+                    tipoRetorno = TipoLA.INVALIDO;
+                } else {
+                    tipoRetorno = tabelaAux.verificar(nome);
+                }
+            }
+        // Validação de chamadas de Função e Procedimento
+        } else if (ctx.IDENT() != null) {
+            if (dadosFuncaoProcedimento.containsKey(ctx.IDENT().getText())) {
+                List<TipoLA> aux = dadosFuncaoProcedimento.get(ctx.IDENT().getText());
+
+                // Verifica se a quantidade de parâmetros bate
+                if (aux.size() == ctx.expressao().size()) {
+                    for (int i = 0; i < ctx.expressao().size(); i++) {
+                        if (aux.get(i) != verificarTipo(tabela, ctx.expressao().get(i))) {
+                            adicionaErroSemantico(ctx.expressao().get(i).getStart(), "incompatibilidade de parametros na chamada de " + ctx.IDENT().getText());
+                        }
+                    }
+                    tipoRetorno = aux.get(aux.size() - 1);
+                } else {
+                    adicionaErroSemantico(ctx.IDENT().getSymbol(), "incompatibilidade de parametros na chamada de " + ctx.IDENT().getText());
+                }
+            } else {
+                tipoRetorno = TipoLA.INVALIDO;
+            }
+        } else if (ctx.NUM_INT() != null) {
+            tipoRetorno = TipoLA.INTEIRO;
+        } else if (ctx.NUM_REAL() != null) {
+            tipoRetorno = TipoLA.REAL;
+        } else {
+            tipoRetorno = verificarTipo(tabela, ctx.expressao().get(0));
+        }
+
+        return tipoRetorno;
+    }
+
 
     public static TipoLA verificarTipo(TabelaSimbolos tabela, LAParser.Parcela_nao_unarioContext ctx) {
         TipoLA tipoRetorno;
