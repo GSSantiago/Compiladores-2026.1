@@ -1,12 +1,13 @@
 package br.ufscar.dc.compiladores.linguagem.la;
 
-import static br.ufscar.dc.compiladores.t4.LASemantico.dadosFuncaoProcedimento;
-import static br.ufscar.dc.compiladores.t4.LASemantico.escoposAninhados;
+import static br.ufscar.dc.compiladores.linguagem.la.LASemantico.dadosFuncaoProcedimento;
+import static br.ufscar.dc.compiladores.linguagem.la.LASemantico.escoposAninhados;
 import br.ufscar.dc.compiladores.linguagem.la.TabelaSimbolos.TipoLA;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import org.antlr.v4.runtime.Token;
+
 
 public class LASemanticoUtils {
 

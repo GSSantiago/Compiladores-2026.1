@@ -3,8 +3,8 @@ package br.ufscar.dc.compiladores.linguagem.la;
 import static br.ufscar.dc.compiladores.linguagem.la.LASemanticoUtils.verificarTipo;
 import static br.ufscar.dc.compiladores.linguagem.la.LASemanticoUtils.adicionaErroSemantico;
 import static br.ufscar.dc.compiladores.linguagem.la.LASemanticoUtils.verificaCompatibilidade;
-import static br.ufscar.dc.compiladores.t4.LASemanticoUtils.confereTipo;
-import br.ufscar.dc.compiladores.t4.TabelaSimbolos.TipoEntrada;
+import static br.ufscar.dc.compiladores.linguagem.la.LASemanticoUtils.confereTipo;
+import br.ufscar.dc.compiladores.linguagem.la.TabelaSimbolos.TipoEntrada;
 import br.ufscar.dc.compiladores.linguagem.la.TabelaSimbolos.TipoLA;
 import org.antlr.v4.runtime.Token;
 import java.util.ArrayList;
@@ -12,39 +12,56 @@ import java.util.HashMap;
 
 public class LASemantico extends LABaseVisitor<Void> {
 
-    // Renomeado de 'tabela' para 'tabelaAtual' para ser mais descritivo
     TabelaSimbolos tabelaAtual;
 
-    // Mantido como estático para que os Utils consigam acessar
     static Escopos escoposAninhados = new Escopos();
 
     static HashMap<String, ArrayList<TipoLA>> dadosFuncaoProcedimento = new HashMap<>();
     
     HashMap<String, ArrayList<String>> tabelaRegistro = new HashMap<>();
 
-    // Método para registrar variáveis com nomes de parâmetros alterados
-    public void registrarVariavel(String nomeVar, String strTipo, Token tNome, Token tTipo) {
-        TabelaSimbolos escopoDestino = escoposAninhados.obterEscopoAtual();
-        TipoLA tipoEnum;
+    //adiciona o símbolo à tabela
+    public void adicionaSimboloTabela(String nome, String tipo, Token nomeToken, Token tipoToken, TipoEntrada tipoEntrada) {
 
-        // Uso de switch expression
-        switch (strTipo) {
-            case "literal":  tipoEnum = TipoLA.LITERAL; break;
-            case "inteiro":  tipoEnum = TipoLA.INTEIRO; break;
-            case "real":     tipoEnum = TipoLA.REAL;    break;
-            case "logico":   tipoEnum = TipoLA.LOGICO;  break;
-            default:         tipoEnum = TipoLA.INVALIDO; break;
+        TabelaSimbolos tabela = escoposAninhados.obterEscopoAtual();
+
+        TipoLA tipoItem;
+
+
+        if (tipo.charAt(0) == '^')
+            tipo = tipo.substring(1);
+        //Simbolos
+        switch (tipo) {
+            case "literal":
+                tipoItem = TipoLA.LITERAL;
+                break;
+            case "inteiro":
+                tipoItem = TipoLA.INTEIRO;
+                break;
+            case "real":
+                tipoItem = TipoLA.REAL;
+                break;
+            case "registro":
+                tipoItem = TipoLA.REGISTRO;
+                break;
+            case "logico":
+                tipoItem = TipoLA.LOGICO;
+                break;
+            case "void":
+                tipoItem = TipoLA.VOID;
+                break;
+            default:
+                tipoItem = TipoLA.INVALIDO;
+                break;
         }
 
-        if (tipoEnum == TipoLA.INVALIDO) {
-            adicionaErroSemantico(tTipo, "tipo " + strTipo + " nao declarado");
-        }
+        if (tipoItem == TipoLA.INVALIDO)
+            adicionaErroSemantico(tipoToken, "tipo " + tipo + " nao declarado");
 
-        if (!escopoDestino.existe(nomeVar)) {
-            escopoDestino.adicionar(nomeVar, tipoEnum);
-        } else {
-            adicionaErroSemantico(tNome, "identificador " + nomeVar + " ja declarado anteriormente");
-        }
+        if (!tabela.existe(nome))
+            tabela.adicionar(nome, tipoItem, tipoEntrada);
+        else
+            adicionaErroSemantico(nomeToken, "identificador " + nome + " ja declarado anteriormente");
     }
 
     @Override
@@ -55,7 +72,7 @@ public class LASemantico extends LABaseVisitor<Void> {
 
     @Override
     public Void visitDeclaracao_local(LAParser.Declaracao_localContext ctx) {
-        tabela = escoposAninhados.obterEscopoAtual();
+        tabelaAtual = escoposAninhados.obterEscopoAtual();
 
         String tipoVariavel;
         String nomeVariavel;
@@ -85,7 +102,7 @@ public class LASemantico extends LABaseVisitor<Void> {
                     for (LAParser.IdentificadorContext ic : ctx.variavel().identificador()) {
                         nomeVariavel = ic.IDENT().get(0).getText();
                         
-                        if (tabela.existe(nomeVariavel) || tabelaRegistro.containsKey(nomeVariavel)) {
+                        if (tabelaAtual.existe(nomeVariavel) || tabelaRegistro.containsKey(nomeVariavel)) {
                             adicionaErroSemantico(ic.getStart(), "identificador " + nomeVariavel + " ja declarado anteriormente");
                         } else {  
                             adicionaSimboloTabela(nomeVariavel, "registro", ic.getStart(), ctx.variavel().tipo().getStart(), TipoEntrada.VARIAVEL);                            
@@ -135,8 +152,8 @@ public class LASemantico extends LABaseVisitor<Void> {
     public Void visitDeclaracao_global(LAParser.Declaracao_globalContext ctx) {
 
         escoposAninhados.criarNovoEscopo();
-        
-        tabela = escoposAninhados.obterEscopoAtual();
+
+        tabelaAtual = escoposAninhados.obterEscopoAtual();
 
 
         ArrayList<TipoLA> tiposVariaveis = new ArrayList<>();
@@ -243,18 +260,18 @@ public class LASemantico extends LABaseVisitor<Void> {
 
     @Override
     public Void visitCmdEnquanto(LAParser.CmdEnquantoContext ctx) {
-        tabela = escoposAninhados.obterEscopoAtual();
+        tabelaAtual = escoposAninhados.obterEscopoAtual();
         
-        TipoLA tipo = verificarTipo(tabela, ctx.expressao());
+        TipoLA tipo = verificarTipo(tabelaAtual, ctx.expressao());
         
         return super.visitCmdEnquanto(ctx);
     }
 
     @Override
     public Void visitCmdSe(LAParser.CmdSeContext ctx) {
-        tabela = escoposAninhados.obterEscopoAtual();
+        tabelaAtual = escoposAninhados.obterEscopoAtual();
         
-        TipoLA tipo = verificarTipo(tabela, ctx.expressao());
+        TipoLA tipo = verificarTipo(tabelaAtual, ctx.expressao());
         
         return super.visitCmdSe(ctx);
     }
