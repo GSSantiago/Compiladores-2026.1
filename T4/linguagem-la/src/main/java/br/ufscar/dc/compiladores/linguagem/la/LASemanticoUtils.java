@@ -1,5 +1,7 @@
 package br.ufscar.dc.compiladores.linguagem.la;
 
+import static br.ufscar.dc.compiladores.t4.LASemantico.dadosFuncaoProcedimento;
+import static br.ufscar.dc.compiladores.t4.LASemantico.escoposAninhados;
 import br.ufscar.dc.compiladores.linguagem.la.TabelaSimbolos.TipoLA;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -48,7 +50,7 @@ public class LASemanticoUtils {
 
         return flag;
     }
-                    
+    
     public static TipoLA verificarTipo(TabelaSimbolos tabela, LAParser.Exp_aritmeticaContext ctx) {
         // A variável que será retornada ao fim da execução é inicializada com o tipo
         // do primeiro elemento que será verificado, para fins de comparação.

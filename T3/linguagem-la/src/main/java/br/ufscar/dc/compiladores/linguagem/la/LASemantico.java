@@ -1,11 +1,16 @@
 package br.ufscar.dc.compiladores.linguagem.la;
 
 import static br.ufscar.dc.compiladores.linguagem.la.LASemanticoUtils.verificarTipo;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+
 import static br.ufscar.dc.compiladores.linguagem.la.LASemanticoUtils.adicionaErroSemantico;
 import static br.ufscar.dc.compiladores.linguagem.la.LASemanticoUtils.verificaCompatibilidade;
 import br.ufscar.dc.compiladores.linguagem.la.TabelaSimbolos.TipoLA;
-import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runti
 
+import static br.ufscar.dc.compiladores.linguagem.la.LASemanticoUtils.adicionaErroSemantico;
 public class LASemantico extends LABaseVisitor<Void> {
 
     // Renomeado de 'tabela' para 'tabelaAtual' para ser mais descritivo
