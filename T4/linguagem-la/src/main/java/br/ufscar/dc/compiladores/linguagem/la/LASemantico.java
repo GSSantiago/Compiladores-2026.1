@@ -67,6 +67,13 @@ public class LASemantico extends LABaseVisitor<Void> {
     @Override
     public Void visitPrograma(LAParser.ProgramaContext ctx) {
         tabelaAtual = new TabelaSimbolos();
+
+        for (LAParser.CmdContext c : ctx.corpo().cmd()) {
+            if (c.cmdRetorne() != null) {
+                adicionaErroSemantico(c.getStart(), "comando retorne nao permitido nesse escopo");
+            }
+        }
+
         return super.visitPrograma(ctx);
     }
 
