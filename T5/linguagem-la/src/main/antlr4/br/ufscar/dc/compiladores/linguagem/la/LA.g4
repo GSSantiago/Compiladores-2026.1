@@ -115,7 +115,7 @@ cmd: cmdLeia | cmdEscreva | cmdSe | cmdCaso | cmdPara | cmdEnquanto | cmdFaca | 
 // REGRAS ESPECÍFICAS DE CADA COMANDO
 cmdLeia: 'leia' '(' ('^')? identificador (',' ('^')? identificador)* ')';
 cmdEscreva: 'escreva' '(' expressao (',' expressao)* ')';
-cmdSe: 'se' expressao 'entao' cmd* ('senao' cmd*)? 'fim_se';
+cmdSe: 'se' expressao 'entao' (cmdEntao+=cmd)* ('senao' (cmdSenao+=cmd)*)? 'fim_se';
 cmdCaso: 'caso' exp_aritmetica 'seja' selecao ('senao' cmd*)? 'fim_caso';
 cmdPara: 'para' IDENT '<-' exp_aritmetica 'ate' exp_aritmetica 'faca' cmd* 'fim_para';
 cmdEnquanto: 'enquanto' expressao 'faca' cmd* 'fim_enquanto';

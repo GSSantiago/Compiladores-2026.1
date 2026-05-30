@@ -6,6 +6,7 @@ import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import br.ufscar.dc.compiladores.linguagem.la.LAParser.ProgramaContext;
+import main.java.br.ufscar.dc.compiladores.linguagem.la.LASemanticoUtils;
 
 public class Principal {
     public static void main(String[] args) throws IOException {
@@ -38,9 +39,17 @@ public class Principal {
         laSeman.visitPrograma(arvore);
         // Abre arquivo de saída e escreve os erros
         try (PrintWriter pw = new PrintWriter(arquivoSaida)) {
-            LASemanticoUtils.errosSemanticos.forEach(pw::println);
-            pw.println("Fim da compilacao");
-
+            // Verifica se a lista de erros está vazia
+            if (!LASemanticoUtils.errosSemanticos.isEmpty()) {
+                // Se tem erro escreve os erros no arquivo e encerra
+                LASemanticoUtils.errosSemanticos.forEach(pw::println);
+                pw.println("Fim da compilacao");
+            } else {
+                // Se não tem erro executa o Gerador.java
+                Gerador gerador = new Gerador(); 
+                gerador.visitPrograma(arvore);
+                pw.print(gerador.saida.toString());
+            }
         } catch (IOException ex) {
             System.err.println("Erro na manipulação do arquivo: " + ex.getMessage());
         }
