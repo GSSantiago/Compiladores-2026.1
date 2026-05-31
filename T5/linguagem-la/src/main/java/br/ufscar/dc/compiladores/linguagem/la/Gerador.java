@@ -3,13 +3,10 @@ package br.ufscar.dc.compiladores.linguagem.la;
 import br.ufscar.dc.compiladores.linguagem.la.TabelaSimbolos.TipoEntrada;
 import br.ufscar.dc.compiladores.linguagem.la.TabelaSimbolos.TipoLA;
 
-// A classe agora estende o LABaseVisitor que foi gerado pela SUA gramática LA.g4
 public class Gerador extends LABaseVisitor<Void> {
 
-    // StringBuilder é excelente para montar o código final
     public StringBuilder saida = new StringBuilder();
     
-    // Gerenciamento de escopos e tabela de símbolos
     private TabelaSimbolos tabelaAtual = new TabelaSimbolos();
     private Escopos escopos = new Escopos();
 
@@ -85,6 +82,57 @@ public class Gerador extends LABaseVisitor<Void> {
     }
 
     @Override
+    public Void visitDeclaracao_global(LAParser.Declaracao_globalContext ctx) {
+        String nomeVar = ctx.IDENT().getText();
+
+        if (ctx.getText().contains("procedimento")) {
+            saida.append("void ").append(nomeVar).append("(");
+        } else if (ctx.getText().contains("funcao")) {
+            String tipoRetorno = ctx.tipo_estendido().getText();
+            saida.append(mapearTipoParaC(mapearStringParaTipoLA(tipoRetorno))).append(" ").append(nomeVar).append("(");
+        }
+
+        escopos.criarNovoEscopo();
+        TabelaSimbolos escopoAtual = escopos.obterEscopoAtual();
+
+        if (ctx.parametros() != null) {
+            for (int i = 0; i < ctx.parametros().parametro().size(); i++) {
+                LAParser.ParametroContext pCtx = ctx.parametros().parametro(i);
+                TipoLA tipoLA = mapearStringParaTipoLA(pCtx.tipo_estendido().getText());
+                String tipoC = mapearTipoParaC(tipoLA);
+
+                for (int j = 0; j < pCtx.identificador().size(); j++) {
+                    String nomeParam = pCtx.identificador(j).getText();
+
+                    escopoAtual.adicionar(nomeParam, tipoLA, TipoEntrada.VARIAVEL);
+
+                    if (tipoC.equals("char")) {
+                        saida.append(tipoC).append(" ").append(nomeParam).append("[80]");
+                    } else {
+                        saida.append(tipoC).append(" ").append(nomeParam);
+                    }
+                    if (j < pCtx.identificador().size() - 1) saida.append(", ");
+                }
+                if (i < ctx.parametros().parametro().size() - 1) saida.append(", ");
+            }
+        }
+        saida.append(") {\n");
+
+        for (LAParser.Declaracao_localContext declCtx : ctx.declaracao_local()) {
+            visitDeclaracao_local(declCtx);
+        }
+        for (LAParser.CmdContext cmdCtx : ctx.cmd()) {
+            visitCmd(cmdCtx);
+        }
+
+        saida.append("}\n\n");
+
+        escopos.abandonarEscopo();
+
+        return null;
+    }
+
+    @Override
     public Void visitVariavel(LAParser.VariavelContext ctx) {
         TabelaSimbolos escopoAtual = escopos.obterEscopoAtual();
         
@@ -125,12 +173,14 @@ public class Gerador extends LABaseVisitor<Void> {
 
     @Override
     public Void visitCmdSe(LAParser.CmdSeContext ctx) {
-        // Substitui os operadores visuais da linguagem LA pelos do C
         String condicao = ctx.expressao().getText()
+                .replace("<>", "!=")
+                .replace("=", "==")
+                .replace("<==", "<=")
+                .replace(">==", ">=")
                 .replace("e", "&&")
                 .replace("ou", "||")
-                .replace("=", "==")
-                .replace("<>>", "!="); // Evita bugs caso o '<>' vire '<>='
+                .replace("nao", "!");
 
         saida.append(String.format("if (%s) {\n", condicao));
 
@@ -146,7 +196,6 @@ public class Gerador extends LABaseVisitor<Void> {
             }
             saida.append("}\n");
         }
-
         return null;
     }
 
@@ -156,8 +205,7 @@ public class Gerador extends LABaseVisitor<Void> {
 
         for (LAParser.IdentificadorContext idCtx : ctx.identificador()) {
             String nomeVariavel = idCtx.getText();
-            // Assumimos que o LASemanticoUtils tenha a lógica ou que você use o escopo para verificar
-            TipoLA tipo = escopo.verificar(nomeVariavel); 
+            TipoLA tipo = escopo.verificar(nomeVariavel);
             
             if (tipo == TipoLA.LITERAL) {
                 saida.append(String.format("gets(%s);\n", nomeVariavel));
@@ -177,11 +225,9 @@ public class Gerador extends LABaseVisitor<Void> {
             String textoExpressao = expCtx.getText();
 
             if (textoExpressao.startsWith("\"") && textoExpressao.endsWith("\"")) {
-                // Impressão direta de String literal
                 saida.append(String.format("printf(%s);\n", textoExpressao));
             } else {
-                // Necessário verificar o tipo para montar a máscara
-                // Obs: Aqui você deve usar o método do seu LASemanticoUtils que verifica o tipo da expressão
+
                 TipoLA tipoDaExpressao = LASemanticoUtils.verificarTipo(escopoAtual, expCtx); 
                 
                 String mascara = obterMascaraIOParaC(tipoDaExpressao);
@@ -211,9 +257,14 @@ public class Gerador extends LABaseVisitor<Void> {
     @Override
     public Void visitCmdEnquanto(LAParser.CmdEnquantoContext ctx) {
         String condicao = ctx.expressao().getText()
+                .replace("<>", "!=")
                 .replace("=", "==")
-                .replace("<>", "!=");
-                
+                .replace("<==", "<=")
+                .replace(">==", ">=")
+                .replace("e", "&&")
+                .replace("ou", "||")
+                .replace("nao", "!");
+
         saida.append(String.format("while(%s) {\n", condicao));
 
         for (LAParser.CmdContext cmdCtx : ctx.cmd()) {
@@ -229,11 +280,16 @@ public class Gerador extends LABaseVisitor<Void> {
         for (LAParser.CmdContext cmdCtx : ctx.cmd()) {
             visitCmd(cmdCtx);
         }
-        
+
         String condicao = ctx.expressao().getText()
+                .replace("<>", "!=")
                 .replace("=", "==")
-                .replace("<>", "!=");
-                
+                .replace("<==", "<=")
+                .replace(">==", ">=")
+                .replace("e", "&&")
+                .replace("ou", "||")
+                .replace("nao", "!");
+
         saida.append(String.format("} while(%s);\n", condicao));
         return null;
     }

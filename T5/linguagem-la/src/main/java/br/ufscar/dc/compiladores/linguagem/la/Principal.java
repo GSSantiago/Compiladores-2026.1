@@ -6,7 +6,6 @@ import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import br.ufscar.dc.compiladores.linguagem.la.LAParser.ProgramaContext;
-import main.java.br.ufscar.dc.compiladores.linguagem.la.LASemanticoUtils;
 
 public class Principal {
     public static void main(String[] args) throws IOException {
