@@ -8,7 +8,7 @@ import java.util.HashMap;
 import static br.ufscar.dc.compiladores.linguagem.la.LASemanticoUtils.adicionaErroSemantico;
 import static br.ufscar.dc.compiladores.linguagem.la.LASemanticoUtils.verificaCompatibilidade;
 import br.ufscar.dc.compiladores.linguagem.la.TabelaSimbolos.TipoLA;
-import org.antlr.v4.runti
+import org.antlr.v4.runtime.Token;
 
 import static br.ufscar.dc.compiladores.linguagem.la.LASemanticoUtils.adicionaErroSemantico;
 public class LASemantico extends LABaseVisitor<Void> {
