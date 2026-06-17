@@ -17,6 +17,9 @@ public class SimLangSemantico extends SimLangBaseVisitor<Void> {
 
     @Override
     public Void visitDeclaracaoSim(SimLangParser.DeclaracaoSimContext ctx) {
+        if (ctx.NOME_SIM() == null || ctx.SIM() == null) {
+            return null; 
+        }
         String nomeSim = ctx.NOME_SIM().getText().replace("\"", "");
         
         // Verifica duplicidade na tabela de símbolos
