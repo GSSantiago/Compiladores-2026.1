@@ -1,0 +1,16 @@
+// Caso de Teste 8: Erro Semântico (Duplicidade na Tabela de Símbolos)
+
+Sim "Mortimer Goth" {
+    Idade: Adulto;
+    Aspiracao: Conhecimento;
+    Traco: Genio, Extrovertido;
+    Habilidades: Logica:8;
+}
+
+// ERRO SEMÂNTICO: O Sim "Mortimer Goth" já foi declarado no escopo global.
+Sim "Mortimer Goth" {
+    Idade: Crianca;
+    Aspiracao: Criatividade;
+    Traco: Melancolico;
+    Habilidades: Pintura:2;
+}

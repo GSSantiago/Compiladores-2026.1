@@ -1,0 +1,15 @@
+// Caso de Teste 5: Erro Sintático Estrutural (Bloco mal formado)
+
+// ERRO SINTÁTICO 1: O usuário esqueceu de abrir a chave '{' depois do nome
+Sim "Vladimir Goth" 
+    Idade: Idoso;
+    Aspiracao: Riqueza;
+    Traco: Esnobe, Maligno;
+    Habilidades: Logica:8;
+}
+
+// ERRO SINTÁTICO 2: Palavra reservada escrita incorretamente (Traços ao invés de Traco)
+Sim "Laura" {
+    Idade: Crianca;
+    Traços: Brincalhona; 
+}

@@ -1,0 +1,10 @@
+// Caso de Teste 7: Erro Semântico (Teto de Habilidades)
+
+Sim "Bob Pancakes" {
+    Idade: Jovem_Adulto;
+    Aspiracao: Chef_De_Sucesso;
+    Traco: Soturno, Preguicoso;
+    
+    // ERRO SEMÂNTICO (Regra 3): O nível máximo de habilidade no jogo é 10.
+    Habilidades: Culinaria:15, Videogame:20;
+}

@@ -1,0 +1,11 @@
+// Caso de Teste 2: Erro de Sintaxe (Falta de Ponto e Vírgula e Separador Incorreto)
+Sim "Laura Caixao" {
+    Idade: Adulto;
+    Aspiracao: Romantica;
+    
+    // ERRO SINTÁTICO 1: Faltou o ';' no final desta linha
+    Traco: Romantica, Extrovertida
+    
+    // ERRO SINTÁTICO 2: Usando ponto ao invés de dois-pontos e faltando número
+    Habilidades: Carisma. 
+}

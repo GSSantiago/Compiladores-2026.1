@@ -1,0 +1,14 @@
+// Caso de Teste 4: Erro Semântico (Incompatibilidade de Idade)
+
+Sim "Enzo" {
+    // Definimos a idade como Bebe
+    Idade: Bebe;
+    
+    // ERRO SEMÂNTICO: Um bebê não pode ter uma aspiração de adulto
+    Aspiracao: Chef_De_Sucesso;
+    
+    Traco: Curioso;
+    
+    // ERRO SEMÂNTICO: Bebês não possuem a habilidade de Programação no jogo
+    Habilidades: Programacao:5, Logica:3;
+}

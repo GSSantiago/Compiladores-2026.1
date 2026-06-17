@@ -1,0 +1,11 @@
+// Caso de Teste 3: Erro Léxico (Tokens Inválidos)
+
+// ERRO LÉXICO 1: O nome do Sim precisa estar entre aspas duplas, não simples.
+Sim 'Don Lothario' {
+    Idade: Jovem_Adulto;
+    Aspiracao: Romantica;
+    
+    // ERRO LÉXICO 2: O símbolo '@' não faz parte da regra de IDENTIFICADOR.
+    Traco: Romantico, @Atraente;
+    Habilidades: Ginastica:8;
+}

@@ -1,0 +1,14 @@
+// Caso de Teste 1: Sintaxe 100% Correta
+Sim "Maria Eduarda" {
+    Idade: Jovem_Adulto;
+    Aspiracao: Conhecimento;
+    Traco: Genio, Alegre, Ambiciosa;
+    Habilidades: Programacao:8, Logica:7;
+}
+
+Sim "Guilherme" {
+    Idade: Adulto;
+    Aspiracao: Genialidade_Academica;
+    Traco: Seguro, Focado;
+    Habilidades: Pesquisa:10, Logica:9, Carisma:5;
+}

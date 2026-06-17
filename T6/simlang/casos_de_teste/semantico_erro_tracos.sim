@@ -1,0 +1,12 @@
+// Caso de Teste 6: Erro Semântico (Conflito e Limite de Traços)
+
+Sim "Nancy Landgraab" {
+    Idade: Adulto;
+    Aspiracao: Riqueza;
+    
+    // ERRO SEMÂNTICO 1 (Regra 1): Traços incompatíveis no mesmo Sim
+    // ERRO SEMÂNTICO 2 (Regra 4): Um Adulto só pode ter 3 traços, aqui temos 4
+    Traco: Boa, Maligna, Esnobe, Amante_Da_Arte;
+    
+    Habilidades: Carisma:7;
+}
