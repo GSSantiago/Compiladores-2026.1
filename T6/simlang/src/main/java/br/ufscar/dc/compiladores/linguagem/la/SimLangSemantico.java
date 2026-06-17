@@ -72,16 +72,20 @@ public class SimLangSemantico extends SimLangBaseVisitor<Void> {
         int nivel = Integer.parseInt(ctx.NUMERO().getText());
         TabelaSimbolos.RegistroSim sim = escopoAtual.getSim(simAtualNome);
 
-        // Regra Semântica 3: Teto de Habilidades (Máximo 10)
-        if (nivel > 10 || nivel < 1) {
-            SimLangSemanticoUtils.adicionarErro(ctx.IDENTIFICADOR().getSymbol(), 
-                "Nivel invalido para a habilidade " + nomeHabilidade + ". O nivel deve estar entre 1 e 10.");
+        // Regra Semântica 3: Teto de Habilidades
+        // Habilidades menores vão até o nível 5, as demais vão até 10.
+        int limiteNivel = 10;
+        if (nomeHabilidade.equals("Fotografia") || nomeHabilidade.equals("Danca") || nomeHabilidade.equals("Boliche")) {
+            limiteNivel = 5;
         }
 
-        // Marca se o Sim tem a habilidade de programação para checarmos a idade depois
-        if (nomeHabilidade.equals("Programacao")) {
-            sim.temProgramacao = true;
+        if (nivel > limiteNivel || nivel < 1) {
+            SimLangSemanticoUtils.adicionarErro(ctx.IDENTIFICADOR().getSymbol(), 
+                "Nivel invalido para a habilidade '" + nomeHabilidade + "'. O nivel deve estar entre 1 e " + limiteNivel + ".");
         }
+
+        // Salva a habilidade no mapa para a checagem de idade mais abaixo
+        sim.habilidades.put(nomeHabilidade, nivel);
 
         return super.visitHabilidade(ctx);
     }
@@ -94,9 +98,12 @@ public class SimLangSemantico extends SimLangBaseVisitor<Void> {
         if (sim.idade == null) return; // Se esqueceu a idade (erro de sintaxe), pula.
 
         // Regra 4: Limite de Traços por Idade
-        int limiteTracos = 3; 
-        if (sim.idade.equals("Bebe") || sim.idade.equals("Crianca")) limiteTracos = 1;
-        else if (sim.idade.equals("Adolescente")) limiteTracos = 2;
+        int limiteTracos = 3; // Jovem Adulto, Adulto e Idoso
+        if (sim.idade.equals("Bebe") || sim.idade.equals("Crianca")) {
+            limiteTracos = 1;
+        } else if (sim.idade.equals("Adolescente")) {
+            limiteTracos = 2;
+        }
 
         if (sim.tracos.size() > limiteTracos) {
             SimLangSemanticoUtils.adicionarErro(ctx.SIM().getSymbol(), 
@@ -126,14 +133,19 @@ public class SimLangSemantico extends SimLangBaseVisitor<Void> {
         }
 
         // Regra 2: Limites de Idade para Habilidades e Aspirações
-        if (sim.idade.equals("Bebe") && sim.temProgramacao) {
-            SimLangSemanticoUtils.adicionarErro(ctx.SIM().getSymbol(), 
-                "Incompatibilidade: Um 'Bebe' não possui capacidade motora para a habilidade 'Programacao'.");
-        }
-        
-        if (sim.idade.equals("Bebe") && sim.aspiracao != null && sim.aspiracao.equals("Chef_De_Sucesso")) {
-            SimLangSemanticoUtils.adicionarErro(ctx.SIM().getSymbol(), 
-                "Incompatibilidade: A aspiracao '" + sim.aspiracao + "' não está disponivel para um 'Bebe'.");
+        if (sim.idade.equals("Bebe") || sim.idade.equals("Crianca")) {
+            
+            // Bloqueio de habilidades exclusivas de adultos
+            if (sim.habilidades.containsKey("Programacao") || sim.habilidades.containsKey("Mixologia")) {
+                SimLangSemanticoUtils.adicionarErro(ctx.SIM().getSymbol(), 
+                    "Incompatibilidade: Um Sim da idade '" + sim.idade + "' nao possui capacidade para a habilidade de adulto declarada.");
+            }
+            
+            // Bloqueio de aspirações não permitidas (ex: Romance, Carreira)
+            if (sim.aspiracao != null && (sim.aspiracao.equals("Chef_De_Sucesso") || sim.aspiracao.equals("Romantico_Serial"))) {
+                SimLangSemanticoUtils.adicionarErro(ctx.SIM().getSymbol(), 
+                    "Incompatibilidade: A aspiracao '" + sim.aspiracao + "' nao esta disponivel para a idade '" + sim.idade + "'.");
+            }
         }
     }
 }

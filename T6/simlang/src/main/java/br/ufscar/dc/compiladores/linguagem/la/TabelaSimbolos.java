@@ -14,11 +14,13 @@ public class TabelaSimbolos {
         public String aspiracao;
         public List<String> tracos;
         public boolean temProgramacao; // Flag para a regra do Bebê
+        public Map<String, Integer> habilidades;
         
         public RegistroSim(String nome) {
             this.nome = nome;
             this.tracos = new ArrayList<>();
             this.temProgramacao = false;
+            this.habilidades = new HashMap<>();
         }
     }
 
