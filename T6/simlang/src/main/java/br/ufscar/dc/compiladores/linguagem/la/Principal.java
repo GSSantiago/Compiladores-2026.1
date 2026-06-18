@@ -54,6 +54,16 @@ public class Principal {
                 }
             } else {
                 System.out.println("✅ SUCESSO! Nenhum erro semântico encontrado.");
+
+                SimLangGeradorPython gerador = new SimLangGeradorPython(semantico.getTabela());
+                gerador.visit(arvore);
+
+                // Grava o arquivo substituindo a extensão .sim por .py
+                String arquivoSaida = arquivoTeste.replace(".sim", ".py");
+                try (java.io.PrintWriter pw = new java.io.PrintWriter(arquivoSaida)) {
+                    pw.print(gerador.saida.toString());
+                    System.out.println("Script Python gerado com sucesso: " + arquivoSaida);
+                }
             }
 
         } catch (IOException e) {

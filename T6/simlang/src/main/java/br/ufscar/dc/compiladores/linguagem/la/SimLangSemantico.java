@@ -151,4 +151,7 @@ public class SimLangSemantico extends SimLangBaseVisitor<Void> {
             }
         }
     }
+    public TabelaSimbolos getTabela() {
+        return this.escopoAtual;
+    }
 }
