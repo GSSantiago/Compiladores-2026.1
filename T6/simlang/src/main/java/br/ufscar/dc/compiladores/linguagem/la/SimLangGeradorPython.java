@@ -9,14 +9,12 @@ public class SimLangGeradorPython extends SimLangBaseVisitor<Void> {
     private TabelaSimbolos tabela;
     private String simAtualNome;
 
-    // Dicionários de mapeamento (SimLang -> IDs The Sims 4)
     private Map<String, String> mapTracos = new HashMap<>();
     private Map<String, String> mapHabilidades = new HashMap<>();
 
     public SimLangGeradorPython(TabelaSimbolos tabela) {
         this.tabela = tabela;
 
-        // Mapeamento de Traços (Traits)
         mapTracos.put("Genio", "trait_Genius");
         mapTracos.put("Alegre", "trait_Cheerful");
         mapTracos.put("Ambiciosa", "trait_Ambitious");
@@ -24,7 +22,6 @@ public class SimLangGeradorPython extends SimLangBaseVisitor<Void> {
         mapTracos.put("Seguro", "trait_SelfAssured");
         mapTracos.put("Focado", "trait_Focused");
 
-        // Mapeamento de Habilidades (Skills)
         mapHabilidades.put("Programacao", "Major_Programming");
         mapHabilidades.put("Logica", "Major_Logic");
         mapHabilidades.put("Pesquisa", "Major_ResearchDebate");
@@ -37,7 +34,10 @@ public class SimLangGeradorPython extends SimLangBaseVisitor<Void> {
         saida.append("@sims4.commands.Command('aplicar_simlang', command_type=sims4.commands.CommandType.Live)\n");
         saida.append("def aplicar_simlang(_connection=None):\n");
         saida.append("    output = sims4.commands.CheatOutput(_connection)\n");
-        saida.append("    output('Aplicando mods gerados pela SimLang...')\n\n");
+        saida.append("    output('Aplicando mods gerados pela SimLang...')\n");
+        
+        // A PROVA REAL: Injete 50.000 simoleons! Se isso funcionar, o seu compilador venceu.
+        saida.append("    sims4.commands.client_cheat('motherlode', _connection)\n\n");
 
         super.visitPrograma(ctx);
 
@@ -52,18 +52,16 @@ public class SimLangGeradorPython extends SimLangBaseVisitor<Void> {
 
         saida.append("    # Configurando o Sim: ").append(simAtualNome).append("\n");
 
-        // Geração do Script para Traços
         for (String traco : sim.tracos) {
-            String cheatTraco = mapTracos.getOrDefault(traco, "trait_" + traco); // fallback generico
+            String cheatTraco = mapTracos.getOrDefault(traco, "trait_" + traco);
             saida.append("    sims4.commands.client_cheat('traits.equip_trait ")
-                    .append(cheatTraco).append("', _connection)\n");
+                 .append(cheatTraco).append("', _connection)\n");
         }
 
-        // Geração do Script para Habilidades
         for (Map.Entry<String, Integer> hab : sim.habilidades.entrySet()) {
             String cheatHab = mapHabilidades.getOrDefault(hab.getKey(), "Major_" + hab.getKey());
             saida.append("    sims4.commands.client_cheat('stats.set_skill_level ")
-                    .append(cheatHab).append(" ").append(hab.getValue()).append("', _connection)\n");
+                 .append(cheatHab).append(" ").append(hab.getValue()).append("', _connection)\n");
         }
         saida.append("\n");
 

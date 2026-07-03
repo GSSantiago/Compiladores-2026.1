@@ -15,7 +15,6 @@ public class TabelaSimbolos {
         LITERAL,
         VOID,
         REGISTRO,
-        TIPOESTENDIDO
     }
 
     public enum TipoEntrada {

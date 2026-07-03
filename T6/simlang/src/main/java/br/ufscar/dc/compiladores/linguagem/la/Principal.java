@@ -5,19 +5,18 @@ import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 
 public class Principal {
     public static void main(String[] args) {
         File caminho = new File(args.length > 0 ? args[0] : "casos_de_teste");
 
         if (caminho.isDirectory()) {
-            System.out.println("📂 Testando todos os arquivos da pasta: " + caminho.getPath());
+            System.out.println("Testando arquivos da pasta: " + caminho.getPath());
             File[] arquivos = caminho.listFiles((dir, name) -> name.endsWith(".sim"));
-            
             if (arquivos != null) {
-                for (File arquivo : arquivos) {
-                    testarArquivo(arquivo.getPath());
-                }
+                for (File arquivo : arquivos) testarArquivo(arquivo.getPath());
             }
         } else {
             testarArquivo(caminho.getPath());
@@ -25,49 +24,32 @@ public class Principal {
     }
 
     private static void testarArquivo(String arquivoTeste) {
-        System.out.println("\n--------------------------------------------------");
-        System.out.println("🚀 Testando: " + arquivoTeste);
-        
         try {
             CharStream cs = CharStreams.fromFileName(arquivoTeste);
             SimLangLexer lexer = new SimLangLexer(cs);
             CommonTokenStream tokens = new CommonTokenStream(lexer);
             SimLangParser parser = new SimLangParser(tokens);
-            
             SimLangParser.ProgramaContext arvore = parser.programa();
 
-            // >>> A REGRA DE OURO QUE IMPEDE O CRASH <<<
-            // Se o ANTLR achou erro de digitação/sintaxe, aborta antes de chamar o Visitor!
-            if (parser.getNumberOfSyntaxErrors() > 0) {
-                System.out.println("❌ Erros Léxicos/Sintáticos encontrados pelo ANTLR. Análise semântica abortada para este arquivo.");
-                return; 
-            }
+            if (parser.getNumberOfSyntaxErrors() > 0) return; 
 
             SimLangSemanticoUtils.errosSemanticos.clear();
             SimLangSemantico semantico = new SimLangSemantico();
             semantico.visit(arvore);
 
-            if (!SimLangSemanticoUtils.errosSemanticos.isEmpty()) {
-                System.out.println("❌ ERROS SEMÂNTICOS ENCONTRADOS:");
-                for (String erro : SimLangSemanticoUtils.errosSemanticos) {
-                    System.out.println(erro);
-                }
-            } else {
-                System.out.println("✅ SUCESSO! Nenhum erro semântico encontrado.");
-
+            if (SimLangSemanticoUtils.errosSemanticos.isEmpty()) {
                 SimLangGeradorPython gerador = new SimLangGeradorPython(semantico.getTabela());
                 gerador.visit(arvore);
 
-                // Grava o arquivo substituindo a extensão .sim por .py
-                String arquivoSaida = arquivoTeste.replace(".sim", ".py");
-                try (java.io.PrintWriter pw = new java.io.PrintWriter(arquivoSaida)) {
+                // GERA APENAS O ARQUIVO .PY SOLTO
+                String caminhoSaida = arquivoTeste.replace(".sim", ".py");
+                try (PrintWriter pw = new PrintWriter(caminhoSaida, StandardCharsets.UTF_8)) {
                     pw.print(gerador.saida.toString());
-                    System.out.println("Script Python gerado com sucesso: " + arquivoSaida);
+                    System.out.println("Código Python gerado: " + caminhoSaida);
                 }
             }
-
         } catch (IOException e) {
-            System.err.println("Erro ao ler o arquivo: " + e.getMessage());
+            System.err.println("Erro: " + e.getMessage());
         }
     }
 }
