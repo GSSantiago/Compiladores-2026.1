@@ -5,6 +5,7 @@
 * **Guilherme de Souza Santiago** - RA: 790847
 * **Maria Eduarda Moura Crusco** - RA: 823060
 
+Video demonstrando a linguagem: https://youtu.be/XPv2DG-X1K8
 ## Sobre o Projeto
 
 A **SimLang** é uma *Domain-Specific Language* (DSL) declarativa projetada para automatizar e facilitar a criação de mods de personagens para o jogo **The Sims 4**. Em vez de digitar manualmente dezenas de *cheats* no console do jogo para configurar as personalidades e talentos de um Sim, o usuário escreve as características desejadas em um arquivo de texto limpo e legível.
@@ -35,7 +36,6 @@ Sim "Maria Eduarda" {
     Traco: Genio, Alegre, Ambiciosa;
     Habilidades: Programacao:8, Logica:7;
 }
-
 ```
 
 Se nenhuma regra semântica for violada, o compilador gerará automaticamente um arquivo de mesma nomenclatura, mas com a extensão **`.py`**, contendo o script traduzido.
@@ -47,6 +47,7 @@ Se nenhuma regra semântica for violada, o compilador gerará automaticamente um
 * **Java 11** ou superior
 * **Maven** (Apache Maven)
 * **ANTLR 4.11.1**
+* **Python 3.7** (Opcional, essa é a versão que o The Sims 4 utiliza para lógica geral)
 * Jogo **The Sims 4** (Opcional, apenas para testar a injeção do mod final)
 
 ---
@@ -58,6 +59,7 @@ Sempre que fizer alterações na gramática (`.g4`) ou implementar novas lógica
 ```bash
 mvn clean compile
 
+
 ```
 
 ---
@@ -68,26 +70,54 @@ Para rodar a classe principal e processar os casos de teste completos, utilize o
 
 Execute o comando:
 
-```
+```bash
 mvn clean package
 ```
 
 Após a geração do arquivo java, execute o seguinte comando:
 
-```
+```bash
 java -jar target/simlang-1.0-SNAPSHOT-jar-with-dependencies.jar casos_de_teste/sim_valido_completo.sim
-
 ```
-
 
 ---
 
 ## Como Utilizar o Mod Gerado no Jogo (Geração de Código)
 
-A fase final (GCI) traduz a linguagem em ações úteis. Para ver o compilador funcionando na prática:
+Para que a engine do The Sims 4 reconheça o seu mod de forma nativa, o script gerado precisa ser compilado para *bytecode* Python (`.pyc`) e empacotado corretamente. Siga os passos abaixo:
 
-1. Navegue até a pasta de saídas e copie o arquivo Python gerado (ex: **`sim_valido_completo.py`**).
-2. Cole este arquivo na pasta oficial de modificações do jogo: **`Documentos/Electronic Arts/The Sims 4/Mods`** *(Certifique-se de que "Modificações de Script" estão habilitadas nas opções do jogo)*.
-3. Inicie o jogo e entre na família com o Sim alvo.
-4. Pressione **`Ctrl + Shift + C`** para abrir a caixa de *cheats*.
-5. Digite o comando **`aplicar_simlang`** e aperte Enter. As habilidades e os traços serão aplicados instantaneamente.
+1. **Compilar para `.pyc`:** A engine do jogo exige estritamente a versão 3.7 do Python.
+```powershell
+py -3.7 -m compileall -b .\sim_valido_completo.py
+```
+
+
+2. **Empacotar o arquivo gerado:** Compacte **apenas** o arquivo `.pyc` recém-gerado em um formato ZIP.
+```powershell
+Compress-Archive -Path .\sim_valido_completo.pyc -DestinationPath .\simlang.zip -Force
+```
+
+
+3. **Renomear para a extensão de script do jogo:** Modifique a extensão para que o The Sims 4 o identifique como um mod.
+```powershell
+Rename-Item .\simlang.zip .\simlang.ts4script -Force
+```
+
+
+4. **Instalar o Mod:** Mova o arquivo `simlang.ts4script` para a pasta de Mods do jogo, localizada por padrão em:
+`Documentos\Electronic Arts\The Sims 4\Mods`
+5. **Habilitar Mods nas Configurações do Jogo:**
+* Abra o The Sims 4.
+* Acesse **Opções de Jogo** > **Outro**.
+* Marque as caixas **Habilitar Conteúdo Personalizado e Modificações** e **Modificações de Script Permitidas**.
+* Salve e **reinicie o jogo**.
+
+
+6. **Executar o Script in-game:**
+* Inicie o seu save ou crie uma família nova.
+* Certifique-se de estar no **Modo Simulação** e selecione o Sim no qual deseja aplicar os atributos.
+* Pressione `Ctrl + Shift + C` para abrir o console de cheats.
+* Digite o comando gerado pelo seu script (ex: `aplicar_simlang`) e pressione **Enter**. O jogo aplicará os traços e habilidades instantaneamente.
+
+
+```
